@@ -30,19 +30,7 @@ static Byte iv [] = {1, 2, 3, 4, 5, 6, 7, 8};
     if (cryptStatus == kCCSuccess)
     {
         NSData *data = [NSData dataWithBytes:buffer length:(NSUInteger)numBytesEncrypted];
-        Byte * dataList = (Byte *)[data bytes];
-        for (int i =0; i < [data length]; i++)
-        {
-            NSString *newHexString = [NSString stringWithFormat:@"%x", dataList[i]&0xFF];
-            if ([newHexString length] == 1)
-            {
-                ciphertext = [NSString stringWithFormat: @"%@0%@", ciphertext, newHexString];
-            }
-            else
-            {
-                ciphertext = [NSString stringWithFormat: @"%@%@", ciphertext, newHexString];
-            }
-        }
+        ciphertext = [self dataToHexString:data];
     }
     return ciphertext;
 }
@@ -51,26 +39,10 @@ static Byte iv [] = {1, 2, 3, 4, 5, 6, 7, 8};
 + (NSString *)decryptWithEDS:(NSString *)encryptedText key:(NSString *)key {
     NSString *decryptedText = @"";
     
-    NSMutableData *mutableData = [NSMutableData data];
-    unsigned char whole_byte;
-    char byte_chars[3] = {'\0','\0','\0'};
-    char byte_single[2] = {'\0', '\0'};
-    for (int i = 0; i < encryptedText.length / 2; i++) {
-        char a = [encryptedText characterAtIndex:2*i];
-        char b = [encryptedText characterAtIndex:2*i+1];
-        if (![[NSString stringWithFormat:@"%c", a] isEqualToString:@"0"]) {
-            byte_chars[0] = a;
-            byte_chars[1] = b;
-            whole_byte = strtol(byte_chars, NULL, 16);
-        } else {
-            byte_single[0] = b;
-            whole_byte = strtol(byte_single, NULL, 16);
-        }
-        [mutableData appendBytes:&whole_byte length:1];
-    }
+    NSData *sourceData = [self hexStringToData:encryptedText];
 
-    NSUInteger dataLength = [mutableData length];
-    Byte *dataByte = (Byte *)[mutableData bytes];
+    NSUInteger dataLength = [sourceData length];
+    Byte *dataByte = (Byte *)[sourceData bytes];
     
     unsigned char buffer[1024];
     memset(buffer, 0, sizeof(char));
